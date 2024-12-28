@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Stores user-related data and relationships to saved recipes and meal plans.
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  savedRecipes  SavedRecipe[]
+  mealPlans     MealPlan[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+
+//  Tracks recipes saved by users, allowing them to categorize them.
+model SavedRecipe {
+  id          String    @id @default(cuid())
+  recipeId    Int      
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collections String[]  
+  createdAt   DateTime  @default(now())
+}
+
+
+//  Represents meal plans for users, organized by start and end dates.
+model MealPlan {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
+  meals     Meal[]
+}
+
+
+// Represents individual meals within a meal plan, specifying the type of meal (e.g., breakfast, lunch) and the recipe associated with it.
+model Meal {
+  id         String    @id @default(cuid())
+  mealPlanId String
+  mealPlan   MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  recipeId   Int      
+  type       MealType
+  date       DateTime
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
